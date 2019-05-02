@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Genome
 {
@@ -295,7 +296,7 @@ public class Genome
         }
 
         float r4 = Random.value;
-        if (r2 < 0.1)
+        if (r2 < 0.2)
         {
             RemoveConnection(innovationHistory);
         }
@@ -398,8 +399,52 @@ public class Genome
 
     }
 
-    void DrawGenome()
+    public void DrawGenome(GameObject panel, GameObject node)
     {
+        Dictionary<Node, Vector3> dicNodes = new Dictionary<Node, Vector3>();
 
+        int xstep = (int)(panel.GetComponent<RectTransform>().rect.size.x / (layers + 2));
+        int x = xstep;
+        for (int l = 0; l < layers; l++)
+        {
+            List<Node> lstNodesInLayer = nodes.FindAll(
+                delegate (Node n)
+                {
+                    return n.layer == l;
+                });
+
+            int ystep = (int)(panel.GetComponent<RectTransform>().rect.size.y / (lstNodesInLayer.Count + 2));
+            for (int y = ystep, index = 0; index < lstNodesInLayer.Count; y += ystep, index++)
+            {
+                GameObject goNode = GameObject.Instantiate(node, panel.transform);
+                goNode.transform.localPosition = new Vector3(x, -y, 0);
+                dicNodes.Add(lstNodesInLayer[index], new Vector3(x, -y, 0));
+            }
+
+            x += xstep;
+        }
+
+        genes.ForEach(delegate (ConnectionGene gene)
+        {
+            GameObject go = new GameObject("Connection");
+            go.transform.parent = panel.transform;
+            go.transform.localPosition = new Vector3();
+            go.transform.localScale = new Vector3(1, 1, 1);
+            go.transform.localRotation = Quaternion.identity;
+            LineRenderer lr = go.AddComponent<LineRenderer>();
+            lr.startColor = Color.white;
+            lr.endColor = Color.white;
+            lr.startWidth = .1f;
+            lr.endWidth = .1f;
+            lr.useWorldSpace = false;
+            Vector3 v3From = dicNodes[gene.fromNode];
+            v3From.z = lr.transform.position.z - 1;
+            Vector3 v3To = dicNodes[gene.toNode];
+            v3To.z = lr.transform.position.z + 1;
+            lr.positionCount = 2;
+            lr.SetPosition(0, v3From);
+            lr.SetPosition(1, v3To);
+
+        });
     }
 }

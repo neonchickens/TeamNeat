@@ -25,7 +25,7 @@ public class Species
         players = new List<Player>();
         players.Add(p);
 
-        bestfitness = p.fitness;
+        bestfitness = p.GetFitness();
         rep = p.brain.clone();
     }
 
@@ -101,9 +101,9 @@ public class Species
             int maxIndex = 0;
             for (int j = 0; j < players.Count; j++)
             {
-                if (players[j].fitness > max)
+                if (players[j].GetFitness() > max)
                 {
-                    max = players[j].fitness;
+                    max = players[j].GetFitness();
                     maxIndex = j;
                 }
             }
@@ -114,10 +114,10 @@ public class Species
 
         players = temp;
 
-        if (players[0].fitness > bestfitness)
+        if (players[0].GetFitness() > bestfitness)
         {
             staleness = 0;
-            bestfitness = players[0].fitness;
+            bestfitness = players[0].GetFitness();
             rep = players[0].brain.clone();
 
         } else
@@ -131,7 +131,7 @@ public class Species
         float sum = 0;
         for (int i = 0; i < players.Count; i++)
         {
-            sum += players[i].fitness;
+            sum += players[i].GetFitness();
         }
         avgfitness = sum / players.Count;
     }
@@ -147,7 +147,7 @@ public class Species
             Player p1 = SelectPlayer();
             Player p2 = SelectPlayer();
 
-            if (p1.fitness > p2.fitness)
+            if (p1.GetFitness() > p2.GetFitness())
             {
                 child = p1.Crossover(p2);
             } else
@@ -165,7 +165,7 @@ public class Species
         float fitnessSum = 0;
         for (int i = 0; i < players.Count; i++)
         {
-            fitnessSum += players[i].fitness;
+            fitnessSum += players[i].GetFitness();
         }
 
         float r = Random.Range(0, fitnessSum);
@@ -173,7 +173,7 @@ public class Species
 
         for (int i = 0; i < players.Count; i++)
         {
-            runningSum += players[i].fitness;
+            runningSum += players[i].GetFitness();
             if (runningSum > r)
             {
                 return players[i];
@@ -183,11 +183,11 @@ public class Species
         return players[0];
     }
 
-    void FitnessSharing()
+    /*void FitnessSharing()
     {
         for (int i = 0; i < players.Count; i++)
         {
             players[i].fitness /= players.Count;
         }
-    }
+    }*/
 }

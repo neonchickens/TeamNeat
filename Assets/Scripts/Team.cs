@@ -16,7 +16,7 @@ public class Team
     private int seasonDistance = 0;
 
     private static int idIncrement = 1;
-    public new readonly string name;
+    public readonly string name;
     public readonly int id;
 
     public Team(string name, List<Player> players)
@@ -30,6 +30,10 @@ public class Team
         this.name = name;
 
         this.players = players;
+        foreach (Player p in players)
+        {
+            Referee.getInstance().LogDraft(id, p.id);
+        }
 
         points = 0;
     }
@@ -51,6 +55,7 @@ public class Team
     public Player AddPlayer(Player p)
     {
         players.Add(p);
+        Referee.getInstance().LogDraft(id, p.id);
         return p;
     }
 
@@ -66,7 +71,7 @@ public class Team
 
     public int GetTeamFitness()
     {
-        return seasonGamesWon * 100 + seasonPoints * 10 + seasonDistance;
+        return seasonGamesWon * 1000 + seasonPoints * 100 + seasonDistance;
     }
     
     void SortPlayers()
@@ -78,9 +83,9 @@ public class Team
             int maxIndex = 0;
             for (int j = 0; j < players.Count; j++)
             {
-                if (players[j].fitness > max)
+                if (players[j].GetFitness() > max)
                 {
-                    max = players[j].fitness;
+                    max = players[j].GetFitness();
                     maxIndex = j;
                 }
             }

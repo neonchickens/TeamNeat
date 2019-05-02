@@ -37,7 +37,7 @@ public class League
             List<Player> teamates = new List<Player>();
             for (int p = 0; p < playersNo; p++)
             {
-                teamates.Add(new Player());
+                teamates.Add(new Player(season));
                 teamates[p].brain.GenerateNetwork();
                 teamates[p].brain.Mutate(lstInnovations);
             }
@@ -56,7 +56,12 @@ public class League
         return league;
     }
 
-    public List<Team> GetRound()
+    public int GetSeason()
+    {
+        return season;
+    }
+
+    public List<Team> GetNextRound()
     {
         SortTeams();
         if (round == roundsInSeason)
@@ -73,7 +78,7 @@ public class League
             float avgFitness = 0;
             foreach (Player p in players)
             {
-                avgFitness += p.fitness;
+                avgFitness += p.GetFitness();
             }
             log += "Avg Fitness: " + (avgFitness / players.Count) + "\n";
             Debug.Log(log);
@@ -102,7 +107,7 @@ public class League
             string s = "";
             for (int p = 0; p < teams[t].players.Count; p++)
             {
-                s += teams[t].players[p].fitness + ": ";
+                s += teams[t].players[p].GetFitness() + ": ";
             }
             Debug.Log("Team " + teams[t].name + ": " + s);
         }
@@ -110,20 +115,20 @@ public class League
         //Bad teams lose more players
         for (int t = teams.Count - 1; t >= 0; t--)
         {
-            if (t > teamsNo - (float)teamsNo / playersNo)
+            if (t > 2 * (float)teamsNo / playersNo)
             {
                 Player pRemove = teams[t].RemoveWorst();
                 players.Remove(pRemove);
-                Debug.Log("Team " + teams[t].name + " (" + teams[t].GetTeamFitness() + "): Removing " + pRemove.fitness);
+                Debug.Log("Team " + teams[t].name + " (" + teams[t].GetTeamFitness() + "): Removing " + pRemove.GetFitness());
                 pRemove = teams[t].RemoveWorst();
                 players.Remove(pRemove);
-                Debug.Log("Team " + teams[t].name + " (" + teams[t].GetTeamFitness() + "): Removing " + pRemove.fitness);
+                Debug.Log("Team " + teams[t].name + " (" + teams[t].GetTeamFitness() + "): Removing " + pRemove.GetFitness());
             }
-            else if (t > teamsNo - 2 * (float)teamsNo / playersNo)
+            else if (t > (float)teamsNo / playersNo)
             {
                 Player pRemove = teams[t].RemoveWorst();
                 players.Remove(pRemove);
-                Debug.Log("Team " + teams[t].name + " (" + teams[t].GetTeamFitness() + "): Removing " + pRemove.fitness);
+                Debug.Log("Team " + teams[t].name + " (" + teams[t].GetTeamFitness() + "): Removing " + pRemove.GetFitness());
             }
         }
 
@@ -144,7 +149,7 @@ public class League
         //Teams that lost players get new ones
         for (int t = teams.Count - 1; t >= 0; t--)
         {
-            if (t > teamsNo - (float)teamsNo / playersNo)
+            if (t > 2 * (float)teamsNo / playersNo)
             {
                 Debug.Log("Team " + teams[t].name + " has changed 2 players.");
                 Player r1 = rookies[Random.Range(0, rookies.Count)];
@@ -153,10 +158,9 @@ public class League
                 Player r2 = rookies[Random.Range(0, rookies.Count)];
                 players.Add(teams[t].AddPlayer(r2));
                 rookies.Remove(r2);
-            }
-            else if (t > teamsNo - 2 * (float)teamsNo / playersNo)
+            } else if (t > (float)teamsNo / playersNo)
             {
-                Debug.Log("Team " + teams[t].name + " has changed 2 players.");
+                Debug.Log("Team " + teams[t].name + " has changed 1 players.");
                 Player r1 = rookies[Random.Range(0, rookies.Count)];
                 players.Add(teams[t].AddPlayer(r1));
                 rookies.Remove(r1);

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3552204928920367559}
   - component: {fileID: 3552204928920367558}
   - component: {fileID: 3552204928920367553}
+  - component: {fileID: 4728820625116666331}
   - component: {fileID: 3552204928920367610}
   - component: {fileID: 3552204928920367557}
   m_Layer: 0
@@ -88,11 +89,24 @@ CapsuleCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3552204928920367552}
   m_Material: {fileID: 0}
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 0.5
+  m_Radius: 0.25
   m_Height: 2
   m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!135 &4728820625116666331
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3552204928920367552}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &3552204928920367610
 Rigidbody:
@@ -105,10 +119,10 @@ Rigidbody:
   m_Mass: 1
   m_Drag: 1
   m_AngularDrag: 10
-  m_UseGravity: 0
+  m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 80
   m_CollisionDetection: 0
 --- !u!114 &3552204928920367557
 MonoBehaviour:
@@ -122,3 +136,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43c53e24173c8e04b8743c12d8236844, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rb: {fileID: 0}

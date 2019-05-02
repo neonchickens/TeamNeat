@@ -54,15 +54,24 @@ public class Controls : MonoBehaviour
         hasPuck = true;
     }
 
-    public void LosePuck()
+    public void OnCollisionEnter(Collision collision)
     {
-        Rigidbody rbPlayer = GetComponent<Rigidbody>();
+        Controls c = collision.gameObject.GetComponent<Controls>();
+        if (c != null)
+        {
+            LosePuck(c);
+            c.LosePuck(this);
+        }
+    }
+
+    public void LosePuck(Controls c)
+    {
         Puck puck = goPuckPlaceHolder.GetComponentInChildren<Puck>();
         if (puck != null)
         {
             puck.transform.parent = null;
-            Rigidbody rbPuck = puck.GetComponent<Rigidbody>();
-            rb.velocity = rbPlayer.velocity;
+            puck.rb.velocity = rb.velocity + c.rb.velocity;
+            puck.rb.isKinematic = false;
         }
         hasPuck = false;
 

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Player
 {
-    public float fitness;
+    private float fitness;
     public int gamesPlayed = 0;
     public float bestfitness;
     public float distance = 0;
@@ -24,9 +24,18 @@ public class Player
 
     private Vector3 posLast;
     public Controls controls;
-    
-    public Player()
+
+    private static int id_inc = 1;
+    public readonly int id;
+
+    public List<Stats> stats;
+
+    public Player(int season)
     {
+        id = id_inc++;
+        stats = new List<Stats>();
+        stats.Add(new Stats(season, id));
+
         vision = new float[genomeInputs];
         decision = new float[genomeOutputs];
 
@@ -91,7 +100,7 @@ public class Player
     
     public Player Clone()
     {
-        Player clone = new Player();
+        Player clone = new Player(League.GetInstance().GetSeason());
         clone.brain = brain;
         clone.fitness = fitness;
         clone.brain.GenerateNetwork();
@@ -100,9 +109,55 @@ public class Player
         return clone;
     }
 
+    public void AddAssist()
+    {
+        fitness += 75;
+        stats[stats.Count - 1].assists++;
+    }
+
+    public void AddGoal()
+    {
+        fitness += 100;
+        stats[stats.Count - 1].points++;
+    }
+
+    public void AddSave()
+    {
+        fitness += 75;
+        stats[stats.Count - 1].saves++;
+    }
+
+    public void AddPass()
+    {
+        fitness += 25;
+        stats[stats.Count - 1].throws++;
+    }
+
+    public void AddSteal()
+    {
+        fitness += 50;
+        stats[stats.Count - 1].steals++;
+    }
+
+    public void AddTurnover()
+    {
+        fitness -= 50;
+        stats[stats.Count - 1].turnovers++;
+    }
+    
+    public void AddFirstPossession()
+    {
+        fitness += 50;
+    }
+
+    public float GetFitness()
+    {
+        return fitness;
+    }
+
     public Player Crossover(Player p2)
     {
-        Player child = new Player();
+        Player child = new Player(League.GetInstance().GetSeason());
         child.brain = brain.Crossover(p2.brain);
         child.brain.GenerateNetwork();
         return child;
@@ -121,7 +176,8 @@ public class Player
     public void EndSeason()
     {
         fitness = 0;
-
+        Referee.getInstance().LogStats(stats[stats.Count - 1]);
+        stats.Add(new Stats(League.GetInstance().GetSeason(), id));
     }
 
 }

@@ -20,6 +20,11 @@ public class Goal : MonoBehaviour
 
     }
 
+    public void Reset()
+    {
+        score.text = "0";
+    }
+
     void OnTriggerEnter(Collider collision)
     {
         Puck p = collision.gameObject.GetComponent<Puck>();
@@ -35,10 +40,7 @@ public class Goal : MonoBehaviour
                 {
                     if (teamates.Equals(player))
                     {
-                        player.fitness += 3;
-                    } else
-                    {
-                        player.fitness -= 1;
+                        player.AddGoal();
                     }
                 }
             }

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class Referee : MonoBehaviour
@@ -12,6 +13,9 @@ public class Referee : MonoBehaviour
     public Puck puck;
     public Text time;
 
+    public GameObject panel;
+    public GameObject prefabNode;
+
     public bool testBuild = false;
 
     public float matchTimeStart = 30;
@@ -19,11 +23,16 @@ public class Referee : MonoBehaviour
     public bool matchActive = false;
 
     private static Referee r;
+
+    public int run;
     
 
     // Start is called before the first frame update
     void Start()
     {
+        StartCoroutine(StartNewRun());
+
+
         r = this;
         gamesInRound = new Queue<Team>();
         StartGame();
@@ -36,6 +45,108 @@ public class Referee : MonoBehaviour
             return null;
         }
         return r;
+    }
+
+
+    // remember to use StartCoroutine when calling this function!
+    IEnumerator StartNewRun()
+    {
+        //Connect to questions database
+        string questions_url = "http://localhost/new_run.php";
+
+        // Create a form object for sending data to the server
+        WWWForm form = new WWWForm();
+        var download = UnityWebRequest.Post(questions_url, form);
+
+        // Wait until the download is done
+        yield return download.SendWebRequest();
+
+        if (download.isNetworkError || download.isHttpError)
+        {
+            //If we can't connect to the server for some reason
+            print("Error downloading: " + download.error);
+
+        }
+        else
+        {
+            //Connected to server
+            Debug.Log(download.downloadHandler.text);
+
+            //Will load the queue object with our json data
+            run = int.Parse(download.downloadHandler.text.Trim());
+
+        }
+    }
+
+
+    public void LogStats(Stats stats)
+    {
+        StartCoroutine(DBStats(stats));
+    }
+
+    public IEnumerator DBStats(Stats stats)
+    {
+        //Connect to questions database
+        string attempts_url = "http://localhost/record_stats.php";
+
+        // Create a form object for sending data to the server
+        WWWForm form = new WWWForm();
+        form.AddField("runid", run);
+        form.AddField("seasonid", stats.season);
+        form.AddField("playerid", stats.playerid);
+        form.AddField("points", stats.points);
+        form.AddField("throws", stats.throws);
+        form.AddField("assists", stats.assists);
+        form.AddField("steals", stats.steals);
+        form.AddField("turnovers", stats.turnovers);
+        form.AddField("saves", stats.saves);
+
+        var download = UnityWebRequest.Post(attempts_url, form);
+
+        // Wait until the download is done
+        yield return download.SendWebRequest();
+
+        if (download.isNetworkError || download.isHttpError)
+        {
+            Debug.Log("Error downloading: " + download.error);
+
+        }
+        else
+        {
+            Debug.Log(download.downloadHandler.text + "\nAttempt sent successfully");
+        }
+    }
+
+    public void LogDraft(int teamid, int plrid)
+    {
+        StartCoroutine(DBDraft(teamid, plrid));
+    }
+
+    public IEnumerator DBDraft(int teamid, int plrid)
+    {
+        //Connect to questions database
+        string attempts_url = "http://localhost/new_player.php";
+
+        // Create a form object for sending data to the server
+        WWWForm form = new WWWForm();
+        form.AddField("runid", run);
+        form.AddField("teamid", teamid);
+        form.AddField("playerid", plrid);
+
+        var download = UnityWebRequest.Post(attempts_url, form);
+
+        // Wait until the download is done
+        yield return download.SendWebRequest();
+
+        if (download.isNetworkError || download.isHttpError)
+        {
+            Debug.Log("Error downloading: " + download.error);
+
+        }
+        else
+        {
+            Debug.Log(download.downloadHandler.text + "\nAttempt sent successfully");
+        }
     }
 
     // Update is called once per frame
@@ -51,6 +162,37 @@ public class Referee : MonoBehaviour
         {
             EndGame();
         }
+
+        Ray ray = FindObjectOfType<Camera>().ScreenPointToRay(Input.mousePosition);
+        RaycastHit[] rayhit = Physics.RaycastAll(ray);
+        if (Input.GetMouseButtonUp(0) && rayhit.Length > 0)
+        {
+            foreach (RaycastHit r in rayhit)
+            {
+                Controls c = r.collider.gameObject.GetComponent<Controls>();
+                if (c != null)
+                {
+                    Player p = c.getPlayer();
+                    panel.SetActive(true);
+                    Debug.Log("Player selected");
+                    p.brain.DrawGenome(panel, prefabNode);
+                }
+            }
+        }
+        if (Input.GetMouseButtonUp(1))
+        {
+            panel.SetActive(false);
+            LineRenderer[] lr = (panel.GetComponents<LineRenderer>());
+            for (int i = lr.Length - 1; i >= 0; i--)
+            {
+                Destroy(lr[i]);
+            }
+            int childs = panel.transform.childCount;
+            for (int i = childs - 1; i >= 0; i--)
+            {
+                GameObject.DestroyImmediate(panel.transform.GetChild(i).gameObject);
+            }
+        }
     }
 
     public void StartGame()
@@ -59,13 +201,13 @@ public class Referee : MonoBehaviour
         {
             if (gamesInRound.Count == 0)
             {
-                gamesInRound = new Queue<Team>(League.GetInstance().GetRound());
+                gamesInRound = new Queue<Team>(League.GetInstance().GetNextRound());
             }
 
             teams = new List<Team>();
             teams.Add(gamesInRound.Dequeue());
             teams.Add(gamesInRound.Dequeue());
-            Debug.Log("Team " + teams[0].name + " vs. Team " + teams[1].name);
+            Debug.Log("Team " + teams[0].name + "(" + teams[0].GetTeamFitness() + ") vs. Team " + teams[1].name + "(" + teams[1].GetTeamFitness() + ")");
 
             for (int t = 0; t < teams.Count; t++)
             {
@@ -86,8 +228,10 @@ public class Referee : MonoBehaviour
         for (int g = 0; g < goals.Length; g++)
         {
             goals[g].team = teams[g];
+            goals[g].Reset();
         }
 
+        puck.Reset();
         matchTime = matchTimeStart;
         r.matchActive = true;
         Spawn();
